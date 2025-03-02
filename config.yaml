@@ -1,0 +1,31 @@
+# config.yaml - Spatial-Temporal Dynamic Network 配置模板
+
+model_name: "bioCV_STDN"
+
+# 数据集配置
+volume_train: "./data/volume_train.npz"
+volume_test: "./data/volume_test.npz"
+flow_train: "./data/flow_train.npz"
+flow_test: "./data/flow_test.npz"
+timeslot_sec: 7200
+threshold: 0.05
+
+# 训练参数
+batch_size: 64
+max_epochs: 30
+att_lstm_num: 1
+long_term_lstm_seq_len: 1
+short_term_lstm_seq_len: 4
+hist_feature_daynum: 0
+last_feature_num: 6
+cnn_nbhd_size: 3
+nbhd_size: 2
+cnn_flat_size: 128
+
+
+
+# SwanLab 相关配置（如果使用 SwanLab 进行训练跟踪，则设置为 true，并填写下列信息）
+swanlab: true
+workspace: shellwork
+project: STDN
+experiment_name: ver1_no_series
