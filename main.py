@@ -45,7 +45,6 @@ parser.add_argument('--workspace', type=str, default='', help='SwanLab workspace
 parser.add_argument('--project', type=str, default='', help='SwanLab project name')
 parser.add_argument('--experiment_name', type=str, default='', help='SwanLab experiment name')
 
-
 # 增加 --config 参数，用于指定 YAML 配置文件路径
 parser.add_argument('--config', type=str, default=None, help='Path to YAML configuration file')
 
@@ -96,23 +95,33 @@ def eval_together(y, pred_y, threshold):
 
 
 def eval_lstm(y, pred_y, threshold):
-    pickup_y = y[:, 0]
-    dropoff_y = y[:, 1]
-    pickup_pred_y = pred_y[:, 0]
-    dropoff_pred_y = pred_y[:, 1]
-    pickup_mask = pickup_y > threshold
-    dropoff_mask = dropoff_y > threshold
-    if np.sum(pickup_mask) != 0:
-        avg_pickup_mape = np.mean(np.abs(pickup_y[pickup_mask] - pickup_pred_y[pickup_mask]) / pickup_y[pickup_mask])
-        avg_pickup_rmse = np.sqrt(np.mean(np.square(pickup_y[pickup_mask] - pickup_pred_y[pickup_mask])))
+    # 打印评估前的形状信息
+    print("eval_lstm: Original y shape:", y.shape)
+    print("eval_lstm: Original pred_y shape:", pred_y.shape)
+    
+    # 将标签展平成一维数组
+    y = y.flatten()
+    pred_y = pred_y.flatten()
+    
+    # 检查两者长度是否一致，否则截断到较小的长度
+    if y.shape[0] != pred_y.shape[0]:
+        min_len = min(y.shape[0], pred_y.shape[0])
+        print("Warning: y and pred_y lengths differ: y_len = {}, pred_y_len = {}. Truncating to {} samples".format(y.shape[0], pred_y.shape[0], min_len))
+        y = y[:min_len]
+        pred_y = pred_y[:min_len]
+    
+    print("eval_lstm: Flattened y length:", y.shape[0])
+    print("eval_lstm: Flattened pred_y length:", pred_y.shape[0])
+    
+    # 构造阈值掩码
+    mask = y > threshold
+    if np.sum(mask) != 0:
+        mape = np.mean(np.abs(y[mask] - pred_y[mask]) / y[mask])
+        rmse = np.sqrt(np.mean(np.square(y[mask] - pred_y[mask])))
     else:
-        avg_pickup_mape, avg_pickup_rmse = None, None
-    if np.sum(dropoff_mask) != 0:
-        avg_dropoff_mape = np.mean(np.abs(dropoff_y[dropoff_mask] - dropoff_pred_y[dropoff_mask]) / dropoff_y[dropoff_mask])
-        avg_dropoff_rmse = np.sqrt(np.mean(np.square(dropoff_y[dropoff_mask] - dropoff_pred_y[dropoff_mask])))
-    else:
-        avg_dropoff_mape, avg_dropoff_rmse = None, None
-    return (avg_pickup_rmse, avg_pickup_mape), (avg_dropoff_rmse, avg_dropoff_mape)
+        mape, rmse = None, None
+
+    return rmse, mape
 
 
 def main(batch_size=64, max_epochs=100, validation_split=0.2, callbacks=None):
@@ -131,6 +140,16 @@ def main(batch_size=64, max_epochs=100, validation_split=0.2, callbacks=None):
         nbhd_size=args.nbhd_size,
         cnn_nbhd_size=args.cnn_nbhd_size
     )
+    
+    print("Training data shapes:")
+    print("  att_cnnx: list of {} tensors, first tensor shape: {}".format(len(att_cnnx), att_cnnx[0].shape))
+    print("  att_flow: list of {} tensors, first tensor shape: {}".format(len(att_flow), att_flow[0].shape))
+    print("  att_x: list of {} tensors, first tensor shape: {}".format(len(att_x), att_x[0].shape))
+    print("  cnnx: list of {} tensors, first tensor shape: {}".format(len(cnnx), cnnx[0].shape))
+    print("  flow: list of {} tensors, first tensor shape: {}".format(len(flow), flow[0].shape))
+    print("  x shape: ", x.shape)
+    print("  y shape: ", y.shape)
+    
     print("Start training {0} with input shape {2} / {1}".format(args.model_name, x.shape, cnnx[0].shape))
 
     model = modeler.stdn(
@@ -154,25 +173,46 @@ def main(batch_size=64, max_epochs=100, validation_split=0.2, callbacks=None):
     )
 
     # 测试数据采样与预测
+    # 注意：测试时必须传入和训练时一致的参数
     att_cnnx, att_flow, att_x, cnnx, flow, x, y = sampler.sample_stdn(
         datatype="test",
+        att_lstm_num=args.att_lstm_num,
+        long_term_lstm_seq_len=args.long_term_lstm_seq_len,
+        short_term_lstm_seq_len=args.short_term_lstm_seq_len,
         nbhd_size=args.nbhd_size,
         cnn_nbhd_size=args.cnn_nbhd_size
     )
+    
+    print("Test data shapes:")
+    print("  att_cnnx: list of {} tensors, first tensor shape: {}".format(len(att_cnnx), att_cnnx[0].shape))
+    print("  att_flow: list of {} tensors, first tensor shape: {}".format(len(att_flow), att_flow[0].shape))
+    print("  att_x: list of {} tensors, first tensor shape: {}".format(len(att_x), att_x[0].shape))
+    print("  cnnx: list of {} tensors, first tensor shape: {}".format(len(cnnx), cnnx[0].shape))
+    print("  flow: list of {} tensors, first tensor shape: {}".format(len(flow), flow[0].shape))
+    print("  x shape: ", x.shape)
+    print("  y shape: ", y.shape)
+    
     y_pred = model.predict(att_cnnx + att_flow + att_x + cnnx + flow + [x, ])
-    threshold = float(sampler.threshold) / sampler.config["volume_train_max"]
+    print("y_pred shape:", y_pred.shape)
+    
+    threshold = float(sampler.threshold)
     print("Evaluating threshold: {0}.".format(threshold))
-    (prmse, pmape), (drmse, dmape) = eval_lstm(y, y_pred, threshold)
-    print("Test on model {0}:\npickup rmse = {1}, pickup mape = {2}%\ndropoff rmse = {3}, dropoff mape = {4}%".format(
-        args.model_name, prmse, pmape * 100, drmse, dmape * 100))
+    
+    # 调用评估函数前打印预测与标签的形状
+    # 调用评估函数前打印预测与标签的形状
+    print("Before evaluation, y shape:", y.shape)
+    print("Before evaluation, y_pred shape:", y_pred.shape)
+
+    rmse, mape = eval_lstm(y, y_pred, threshold)
+    print("Test on model {0}:".format(args.model_name))
+    print("  rmse = {0}, mape = {1}%".format(rmse, mape * 100 if mape is not None else None))
+
     
     # SwanLab记录测试指标
     if args.swanlab:
         swanlab.log({
-            "test/pickup_rmse": prmse,
-            "test/pickup_mape": pmape * 100,
-            "test/dropoff_rmse": drmse,
-            "test/dropoff_mape": dmape * 100
+            "test/rmse": prmse,
+            "test/mape": pmape * 100 if pmape is not None else None
         })
 
     # 保存模型

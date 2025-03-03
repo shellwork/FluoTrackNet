@@ -12,7 +12,7 @@ threshold: 0.05
 
 # 训练参数
 batch_size: 64
-max_epochs: 30
+max_epochs: 50
 att_lstm_num: 1
 long_term_lstm_seq_len: 1
 short_term_lstm_seq_len: 4
@@ -28,4 +28,4 @@ cnn_flat_size: 128
 swanlab: true
 workspace: shellwork
 project: STDN
-experiment_name: ver1_no_series
+experiment_name: ver1_no_series_t
