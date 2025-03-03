@@ -153,7 +153,7 @@ class file_loader:
                         cnn_features[seqn].append(cnn_feature)
 
                         # (b) FLOW特征: 直接取 flow_data[real_t], 再做邻域提取
-                        if real_t < 0:
+                        if real_t < 0 or real_t >= flow_data.shape[0]:
                             # 边界情况，可用零填充或直接跳过
                             local_flow_feature = np.zeros((2*cnn_nbhd_size+1, 2*cnn_nbhd_size+1, 4), dtype=flow_data.dtype)
                         else:

@@ -7,7 +7,7 @@ from glob import glob
 # 单个实验处理函数
 
 def preprocess_image(image):
-    blurred = image  # 如需滤波，可用：cv2.GaussianBlur(image, (3,3), 0)
+    blurred = cv2.GaussianBlur(image, (3,3), 0)  # 如需滤波，可用：cv2.GaussianBlur(image, (3,3), 0)
     return blurred
 
 def grid_intensity_statistics(image, grid_size=(8, 8)):
@@ -129,7 +129,7 @@ def min_max_scale(data):
         return data
     return (data - dmin) / (dmax - dmin)
 
-def process_image_sequence(image_folder, grid_size=(8, 8), save_demo=False):
+def process_image_sequence(image_folder, grid_size=(8, 8), save_demo=True):
     image_files = sorted(glob(os.path.join(image_folder, "*.jpg")))
     if not image_files:
         raise ValueError(f"未在指定文件夹 {image_folder} 内找到 .jpg 图片。")
@@ -176,8 +176,8 @@ def process_image_sequence(image_folder, grid_size=(8, 8), save_demo=False):
     flows = np.array(flows)      # (T-1, H, W, 4)
 
     # min_max归一化
-    volumes = min_max_scale(volumes)
-    flows = min_max_scale(flows)
+    # volumes = min_max_scale(volumes)
+    # flows = min_max_scale(flows)
     
     return volumes, flows
 
@@ -261,12 +261,17 @@ if __name__ == "__main__":
         "data_pre/1BMSC-20 h/20h BMSC5_多通道缩时_20240723_02",
         "data_pre/1BMSC-20 h/20h BMSC98_缩时_20240723_01",
     ]
-    grid_size = (8, 8)
+    # 网格大小
+    grid_size = (16, 16)
     
     # 2) 合并多组实验 + 插入0帧
     volumes_merged, flows_merged = merge_experiments_with_zeros(experiment_folders, grid_size)
     print("\n合并后的 volume 形状:", volumes_merged.shape)  # (T_all, H, W)
     print("合并后的 flow   形状:", flows_merged.shape)     # (T_all-1, H, W, 4)
+    
+    # 数据归一化处理
+    volumes_merged = min_max_scale(volumes_merged)
+    flows_merged = min_max_scale(flows_merged)
     
     # 3) 分割 & 保存
     save_folder = "data"
