@@ -199,7 +199,6 @@ def main(batch_size=64, max_epochs=100, validation_split=0.2, callbacks=None):
     print("Evaluating threshold: {0}.".format(threshold))
     
     # 调用评估函数前打印预测与标签的形状
-    # 调用评估函数前打印预测与标签的形状
     print("Before evaluation, y shape:", y.shape)
     print("Before evaluation, y_pred shape:", y_pred.shape)
 
@@ -211,8 +210,8 @@ def main(batch_size=64, max_epochs=100, validation_split=0.2, callbacks=None):
     # SwanLab记录测试指标
     if args.swanlab:
         swanlab.log({
-            "test/rmse": prmse,
-            "test/mape": pmape * 100 if pmape is not None else None
+            "test/rmse": rmse,
+            "test/mape": mape * 100 if mape is not None else None
         })
 
     # 保存模型
