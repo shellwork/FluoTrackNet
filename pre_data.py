@@ -7,8 +7,8 @@ from glob import glob
 # 单个实验处理函数
 
 def preprocess_image(image):
-    blurred = cv2.GaussianBlur(image, (3,3), 0)  # 如需滤波，可用：cv2.GaussianBlur(image, (3,3), 0)
-    return blurred
+    # image = cv2.GaussianBlur(image, (3,3), 0)  # 如需滤波，可用：cv2.GaussianBlur(image, (3,3), 0)
+    return image
 
 def grid_intensity_statistics(image, grid_size=(8, 8)):
     green_channel = image[:, :, 1].astype(np.float32)
@@ -31,11 +31,12 @@ def grid_intensity_statistics(image, grid_size=(8, 8)):
     
     return intensity_map
 
-def detect_fluorescent_points(image, max_corners=1500, quality_level=0.001, min_distance=1):
+def detect_fluorescent_points(image, max_corners=300, quality_level=0.05, min_distance=2, blockSize=5):
     gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
     points = cv2.goodFeaturesToTrack(gray, maxCorners=max_corners,
                                      qualityLevel=quality_level,
-                                     minDistance=min_distance)
+                                     minDistance=min_distance,
+                                     blockSize=blockSize)
     return points
 
 def compute_flow_optical(prev_img, curr_img, grid_size, draw_flow=False):
@@ -51,9 +52,9 @@ def compute_flow_optical(prev_img, curr_img, grid_size, draw_flow=False):
     num_prev = prev_points.shape[0]
     print(f"光流跟踪：前一帧检测到 {num_prev} 个荧光点")
     
-    lk_params = dict(winSize=(10, 10),
+    lk_params = dict(winSize=(15, 15),
                      maxLevel=2,
-                     criteria=(cv2.TERM_CRITERIA_EPS | cv2.TERM_CRITERIA_COUNT, 10, 0.03))
+                     criteria=(cv2.TERM_CRITERIA_EPS | cv2.TERM_CRITERIA_COUNT, 10, 0.01))
     
     curr_points, status, _ = cv2.calcOpticalFlowPyrLK(prev_gray, curr_gray,
                                                       prev_points, None, **lk_params)
