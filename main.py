@@ -169,7 +169,8 @@ def main(batch_size=64, max_epochs=100, validation_split=0.2, callbacks=None):
         batch_size=batch_size,
         validation_split=validation_split,
         epochs=max_epochs,
-        callbacks=callbacks
+        callbacks=callbacks,
+        verbose=2
     )
 
     # 测试数据采样与预测

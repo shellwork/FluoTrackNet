@@ -8,14 +8,14 @@ volume_test: "./data/volume_test.npz"
 flow_train: "./data/flow_train.npz"
 flow_test: "./data/flow_test.npz"
 timeslot_sec: 7200
-threshold: 0.05
+threshold: 0.01
 
 # 训练参数
-batch_size: 256
+batch_size: 128
 max_epochs: 50
-att_lstm_num: 2
-long_term_lstm_seq_len: 3
-short_term_lstm_seq_len: 2
+att_lstm_num: 1
+long_term_lstm_seq_len: 1
+short_term_lstm_seq_len: 4
 hist_feature_daynum: 0
 last_feature_num: 6
 cnn_nbhd_size: 3
@@ -28,4 +28,4 @@ cnn_flat_size: 128
 swanlab: true
 workspace: shellwork
 project: STDN
-experiment_name: ver1
+experiment_name: ver2_1

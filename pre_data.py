@@ -31,12 +31,16 @@ def grid_intensity_statistics(image, grid_size=(8, 8)):
     
     return intensity_map
 
-def detect_fluorescent_points(image, max_corners=300, quality_level=0.05, min_distance=2, blockSize=5):
+def detect_fluorescent_points(image, max_corners=500, quality_level=0.005, min_distance=1, blockSize=3):
     gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
     points = cv2.goodFeaturesToTrack(gray, maxCorners=max_corners,
                                      qualityLevel=quality_level,
                                      minDistance=min_distance,
                                      blockSize=blockSize)
+    # if points is not None:
+    #     print(f"检测到 {len(points)} 个特征点")
+    # else:
+    #     print("未检测到特征点")
     return points
 
 def compute_flow_optical(prev_img, curr_img, grid_size, draw_flow=False):
@@ -52,9 +56,9 @@ def compute_flow_optical(prev_img, curr_img, grid_size, draw_flow=False):
     num_prev = prev_points.shape[0]
     print(f"光流跟踪：前一帧检测到 {num_prev} 个荧光点")
     
-    lk_params = dict(winSize=(15, 15),
-                     maxLevel=2,
-                     criteria=(cv2.TERM_CRITERIA_EPS | cv2.TERM_CRITERIA_COUNT, 10, 0.01))
+    lk_params = dict(winSize=(21, 21),
+                     maxLevel=4,
+                     criteria=(cv2.TERM_CRITERIA_EPS | cv2.TERM_CRITERIA_COUNT, 50, 0.001))
     
     curr_points, status, _ = cv2.calcOpticalFlowPyrLK(prev_gray, curr_gray,
                                                       prev_points, None, **lk_params)
@@ -147,6 +151,7 @@ def process_image_sequence(image_folder, grid_size=(8, 8), save_demo=True):
         img_filtered = preprocess_image(img)
         
         intensity_map = grid_intensity_statistics(img_filtered, grid_size)
+        # print(f"第 {idx+1} 帧强度统计最大值：{np.max(intensity_map)}, 最小值：{np.min(intensity_map)}")
         volumes.append(intensity_map)
         
         if prev_img is not None:
@@ -163,6 +168,7 @@ def process_image_sequence(image_folder, grid_size=(8, 8), save_demo=True):
                                                    grid_size, draw_flow=False)
             
             if flow_matrix is not None:
+                # print(f"第 {idx+1} 帧流场矩阵最大值：{np.max(flow_matrix)}, 最小值：{np.min(flow_matrix)}")
                 h, w = intensity_map.shape
                 flow_map = flow_matrix_to_map(flow_matrix, h, w)
             else:
@@ -184,7 +190,7 @@ def process_image_sequence(image_folder, grid_size=(8, 8), save_demo=True):
 
 
 # 多组实验合并
-def merge_experiments_with_zeros(experiment_folders, grid_size=(8,8)):
+def merge_experiments_with_zeros(experiment_folders, grid_size=(8,8), zero_frame=True):
     """
     对于多个实验文件夹 experiment_folders，依次调用 process_image_sequence，
     在相邻实验之间插入 (1, H, W) 的零帧和 (1, H, W, 4) 的零flow。
@@ -212,8 +218,9 @@ def merge_experiments_with_zeros(experiment_folders, grid_size=(8,8)):
             zero_flow = np.zeros((1, H, W, 4), dtype=f.dtype)
             
             # 插入 0 帧后再衔接新的实验
-            all_volumes.append(zero_vol)
-            all_flows.append(zero_flow)
+            if zero_frame == True:
+                all_volumes.append(zero_vol)
+                all_flows.append(zero_flow)
             
             all_volumes.append(v)
             all_flows.append(f)
@@ -258,15 +265,21 @@ def save_preprocessed_data(volumes, flows, save_folder):
 if __name__ == "__main__":
     # 1) 定义多组实验文件夹，每个文件夹下都有 .jpg 图像
     experiment_folders = [
-        "data_pre/1BMSC-20 h/20h BMSC8_多通道缩时_20240723_02",
-        "data_pre/1BMSC-20 h/20h BMSC5_多通道缩时_20240723_02",
-        "data_pre/1BMSC-20 h/20h BMSC98_缩时_20240723_01",
+        "data_pre/frames_output/cbd_缩时_20250410_03",
+        "data_pre/frames_output/cbd_缩时_20250410_04",
+        "data_pre/frames_output/cbd_缩时_20250410_05",
+        "data_pre/frames_output/cbd_缩时_20250410_06",
+        "data_pre/frames_output/cbd_缩时_20250410_07",
+        # "data_pre/1BMSC-20 h/20h BMSC8_多通道缩时_20240723_02",
+        # "data_pre/1BMSC-20 h/20h BMSC5_多通道缩时_20240723_02",
+        # "data_pre/1BMSC-20 h/20h BMSC98_缩时_20240723_01",
     ]
+
     # 网格大小
     grid_size = (16, 16)
     
     # 2) 合并多组实验 + 插入0帧
-    volumes_merged, flows_merged = merge_experiments_with_zeros(experiment_folders, grid_size)
+    volumes_merged, flows_merged = merge_experiments_with_zeros(experiment_folders, grid_size, zero_frame=False) # 如果数据长度不够务必不要使用零帧来分割不同实验否则会出现测试集数据长度不够的问题
     print("\n合并后的 volume 形状:", volumes_merged.shape)  # (T_all, H, W)
     print("合并后的 flow   形状:", flows_merged.shape)     # (T_all-1, H, W, 4)
     
@@ -277,3 +290,4 @@ if __name__ == "__main__":
     # 3) 分割 & 保存
     save_folder = "data"
     save_preprocessed_data(volumes_merged, flows_merged, save_folder)
+
