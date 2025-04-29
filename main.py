@@ -12,6 +12,7 @@ import tensorflow as tf
 import file_loader
 import models
 
+
 # 设置 GPU 仅在需要时动态分配内存
 gpus = tf.config.experimental.list_physical_devices('GPU')
 if gpus:
@@ -194,7 +195,7 @@ def main(batch_size=64, max_epochs=100, validation_split=0.2, callbacks=None):
     print("  y shape: ", y.shape)
     
     y_pred = model.predict(att_cnnx + att_flow + att_x + cnnx + flow + [x, ])
-    print("y_pred shape:", y_pred.shape)
+    print("Inference done. y_pred shape:", y_pred.shape)
     
     threshold = float(sampler.threshold)
     print("Evaluating threshold: {0}.".format(threshold))
@@ -206,8 +207,11 @@ def main(batch_size=64, max_epochs=100, validation_split=0.2, callbacks=None):
     rmse, mape = eval_lstm(y, y_pred, threshold)
     print("Test on model {0}:".format(args.model_name))
     print("  rmse = {0}, mape = {1}%".format(rmse, mape * 100 if mape is not None else None))
-
     
+    # 测试后做推理可视化图
+    from plot import visualization_plot
+    visualization_plot(y, y_pred, sampler, num_samples_to_plot=300)
+
     # SwanLab记录测试指标
     if args.swanlab:
         swanlab.log({

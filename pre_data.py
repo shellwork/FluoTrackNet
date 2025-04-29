@@ -221,10 +221,12 @@ def merge_experiments_with_zeros(experiment_folders, grid_size=(8,8), zero_frame
             if zero_frame == True:
                 all_volumes.append(zero_vol)
                 all_flows.append(zero_flow)
+                all_flows.append(zero_flow.copy())  # 新增此行，插入第二个零流量帧
             
             all_volumes.append(v)
             all_flows.append(f)
     
+    # all_flows.append(zero_flow)
     # 拼接
     merged_volumes = np.concatenate(all_volumes, axis=0)
     merged_flows   = np.concatenate(all_flows, axis=0)
@@ -270,16 +272,16 @@ if __name__ == "__main__":
         "data_pre/frames_output/cbd_缩时_20250410_05",
         "data_pre/frames_output/cbd_缩时_20250410_06",
         "data_pre/frames_output/cbd_缩时_20250410_07",
-        # "data_pre/1BMSC-20 h/20h BMSC8_多通道缩时_20240723_02",
-        # "data_pre/1BMSC-20 h/20h BMSC5_多通道缩时_20240723_02",
-        # "data_pre/1BMSC-20 h/20h BMSC98_缩时_20240723_01",
+        "data_pre/1BMSC-20 h/20h BMSC8_多通道缩时_20240723_02",
+        "data_pre/1BMSC-20 h/20h BMSC5_多通道缩时_20240723_02",
+        "data_pre/1BMSC-20 h/20h BMSC98_缩时_20240723_01",
     ]
 
     # 网格大小
     grid_size = (16, 16)
     
     # 2) 合并多组实验 + 插入0帧
-    volumes_merged, flows_merged = merge_experiments_with_zeros(experiment_folders, grid_size, zero_frame=False) # 如果数据长度不够务必不要使用零帧来分割不同实验否则会出现测试集数据长度不够的问题
+    volumes_merged, flows_merged = merge_experiments_with_zeros(experiment_folders, grid_size, zero_frame=True) # 如果数据长度不够务必不要使用零帧来分割不同实验否则会出现测试集数据长度不够的问题
     print("\n合并后的 volume 形状:", volumes_merged.shape)  # (T_all, H, W)
     print("合并后的 flow   形状:", flows_merged.shape)     # (T_all-1, H, W, 4)
     

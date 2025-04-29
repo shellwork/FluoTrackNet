@@ -115,7 +115,7 @@ class models:
 
         #compare
         att_low_level=[attention.Attention(method='cba')([att_lstms[att], lstm]) for att in range(att_lstm_num)]
-        att_low_level=Concatenate(axis=-1)(att_low_level)
+        att_low_level = Concatenate(axis=-1)(att_low_level)
         att_low_level=Reshape(target_shape=(att_lstm_num, lstm_out_size))(att_low_level)
 
 
