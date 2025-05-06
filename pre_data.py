@@ -266,20 +266,15 @@ def save_preprocessed_data(volumes, flows, save_folder):
 
 if __name__ == "__main__":
     # 1) 定义多组实验文件夹，每个文件夹下都有 .jpg 图像
-    experiment_folders = [
-        "data_pre/frames_output/cbd_缩时_20250410_03",
-        "data_pre/frames_output/cbd_缩时_20250410_04",
-        "data_pre/frames_output/cbd_缩时_20250410_05",
-        "data_pre/frames_output/cbd_缩时_20250410_06",
-        "data_pre/frames_output/cbd_缩时_20250410_07",
-        "data_pre/1BMSC-20 h/20h BMSC8_多通道缩时_20240723_02",
-        "data_pre/1BMSC-20 h/20h BMSC5_多通道缩时_20240723_02",
-        "data_pre/1BMSC-20 h/20h BMSC98_缩时_20240723_01",
-    ]
-
-    # 网格大小
-    grid_size = (16, 16)
-    
+    # 读入参数文件
+    import yaml
+    config_path = 'config.yaml'
+    print(f"Loading configuration from: {config_path}")
+    with open(config_path, "r") as f:
+        config = yaml.safe_load(f)
+    # 定义网格大小和原始图片文件夹
+    grid_size = config["grid_size"]
+    experiment_folders = config["experiment_folders"]
     # 2) 合并多组实验 + 插入0帧
     volumes_merged, flows_merged = merge_experiments_with_zeros(experiment_folders, grid_size, zero_frame=True) # 如果数据长度不够务必不要使用零帧来分割不同实验否则会出现测试集数据长度不够的问题
     print("\n合并后的 volume 形状:", volumes_merged.shape)  # (T_all, H, W)
@@ -290,6 +285,6 @@ if __name__ == "__main__":
     flows_merged = min_max_scale(flows_merged)
     
     # 3) 分割 & 保存
-    save_folder = "data"
+    save_folder = config["save_folder"]
     save_preprocessed_data(volumes_merged, flows_merged, save_folder)
 

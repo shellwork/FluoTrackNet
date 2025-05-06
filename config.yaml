@@ -2,7 +2,21 @@
 
 model_name: "bioCV_STDN"
 
-# 数据集配置
+# 数据预处理配置
+experiment_folders: [
+        "data_pre/1BMSC-20 h/20h BMSC8_多通道缩时_20240723_02",
+        "data_pre/1BMSC-20 h/20h BMSC5_多通道缩时_20240723_02",
+        "data_pre/1BMSC-20 h/20h BMSC98_缩时_20240723_01",
+        "data_pre/frames_output/cbd_缩时_20250410_03",
+        "data_pre/frames_output/cbd_缩时_20250410_04",
+        "data_pre/frames_output/cbd_缩时_20250410_05",
+        "data_pre/frames_output/cbd_缩时_20250410_06",
+        "data_pre/frames_output/cbd_缩时_20250410_07"
+    ]
+grid_size: [16, 16] # 数据预处理网格大小
+save_folder: "data"
+
+# 训练数据集配置
 volume_train: "./data/volume_train.npz"
 volume_test: "./data/volume_test.npz"
 flow_train: "./data/flow_train.npz"
@@ -10,11 +24,12 @@ flow_test: "./data/flow_test.npz"
 timeslot_sec: 7200
 threshold: 0.01
 
+
 # 训练参数
 batch_size: 128
-max_epochs: 50
+max_epochs: 1
 att_lstm_num: 2
-long_term_lstm_seq_len: 1
+long_term_lstm_seq_len: 3
 short_term_lstm_seq_len: 4
 hist_feature_daynum: 0
 last_feature_num: 6
@@ -22,10 +37,12 @@ cnn_nbhd_size: 3
 nbhd_size: 2
 cnn_flat_size: 128
 
-
-
 # SwanLab 相关配置（如果使用 SwanLab 进行训练跟踪，则设置为 true，并填写下列信息）
-swanlab: true
+swanlab: false
 workspace: shellwork
 project: STDN
 experiment_name: ver2_2
+
+# 推理代码配置
+model_path: "model_output/bioCV_STDN20250506120502.h5"
+test_image_folder: "data_pre/1BMSC-20 h/20h BMSC8_多通道缩时_20240723_02"

@@ -221,10 +221,10 @@ def main(batch_size=64, max_epochs=100, validation_split=0.2, callbacks=None):
 
     # 保存模型
     currTime = datetime.datetime.now().strftime("%Y%m%d%H%M%S")
-    file_path = os.path.join(model_hdf5_path, args.model_name + currTime + ".keras")
+    file_path = os.path.join(model_hdf5_path, args.model_name + currTime + ".h5")
     if os.path.exists(file_path):
         os.remove(file_path)
-    model.save(file_path, save_format='keras')
+    model.save(file_path, save_format='tf')
 
 
 if __name__ == "__main__":
