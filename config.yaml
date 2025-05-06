@@ -8,10 +8,10 @@ experiment_folders: [
         "data_pre/1BMSC-20 h/20h BMSC5_多通道缩时_20240723_02",
         "data_pre/1BMSC-20 h/20h BMSC98_缩时_20240723_01",
         "data_pre/frames_output/cbd_缩时_20250410_03",
-        "data_pre/frames_output/cbd_缩时_20250410_04",
+        "data_pre/frames_output/cbd_缩时_20250410_07",
         "data_pre/frames_output/cbd_缩时_20250410_05",
         "data_pre/frames_output/cbd_缩时_20250410_06",
-        "data_pre/frames_output/cbd_缩时_20250410_07"
+        "data_pre/frames_output/cbd_缩时_20250410_04"
     ]
 grid_size: [16, 16] # 数据预处理网格大小
 save_folder: "data"
@@ -44,5 +44,5 @@ project: STDN
 experiment_name: ver2_2
 
 # 推理代码配置
-model_path: "model_output/bioCV_STDN20250506120502.h5"
+model_path: "model_output/bioCV_STDN20250506153104.h5"
 test_image_folder: "data_pre/1BMSC-20 h/20h BMSC8_多通道缩时_20240723_02"

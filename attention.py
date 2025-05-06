@@ -9,7 +9,14 @@ class Attention(Layer):
             raise ValueError('attention method is not supported')
         self.method = method
         super(Attention, self).__init__(**kwargs)
-
+        
+    def get_config(self):
+        config = super().get_config()
+        config.update({
+            "method": self.method  # 保存 method 参数
+        })
+        return config
+    
     def build(self, input_shape):
         if isinstance(input_shape, list):
             self.att_size = input_shape[0][-1]
@@ -100,6 +107,13 @@ class SimpleAttention(Layer):
             raise ValueError('attention method is not supported')
         self.method = method
         super(SimpleAttention, self).__init__(**kwargs)
+        
+    def get_config(self):
+        config = super().get_config()
+        config.update({
+            "method": self.method  # 保存 method 参数
+        })
+        return config
 
     def build(self, input_shape):
         if isinstance(input_shape, list):

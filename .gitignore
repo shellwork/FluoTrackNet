@@ -1,7 +1,6 @@
 lk_visualization/
 data_pre/
 swanlog/
-
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
