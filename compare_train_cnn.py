@@ -30,19 +30,22 @@ args = parser.parse_args()
 # -----------------------
 def load_data(data_folder):
     # 加载预处理后的数据
-    volume_train = np.load(os.path.join(data_folder, "volume_train.npz"))["volume"]  # (T_train, H, W)
-    flow_train   = np.load(os.path.join(data_folder, "flow_train.npz"))["flow"]      # (T_train-1, H, W, 4)
-    volume_test  = np.load(os.path.join(data_folder, "volume_test.npz"))["volume"]    # (T_test, H, W)
-    flow_test    = np.load(os.path.join(data_folder, "flow_test.npz"))["flow"]        # (T_test-1, H, W, 4)
+    volume_train_full = np.load(os.path.join(data_folder, "volume_train.npz"))["volume"]  # (T_train, H, W)
+    flow_train_full   = np.load(os.path.join(data_folder, "flow_train.npz"))["flow"]      # (T_train-1, H, W, 4) or similar
+    volume_test_full  = np.load(os.path.join(data_folder, "volume_test.npz"))["volume"]   # (T_test, H, W)
+    flow_test_full    = np.load(os.path.join(data_folder, "flow_test.npz"))["flow"]       # (T_test-1, H, W, 4) or similar
     
     # 训练数据：用 flow_train[i] 预测 volume_train[i+1]
-    X_train = flow_train
-    Y_train = volume_train[1:]
+    # Y_train 应该有 volume_train_full.shape[0] - 1 个样本
+    num_train_samples = volume_train_full.shape[0]
+    Y_train = volume_train_full[:num_train_samples+1] # or volume_train_full[1:]
+    X_train = flow_train_full[:num_train_samples]
     
-    # 测试数据：确保标签数与流数据数一致
-    n_test = flow_test.shape[0]
-    X_test = flow_test
-    Y_test = volume_test[1:n_test+1]
+    # 测试数据：用 flow_test[i] 预测 volume_test[i+1]
+    # Y_test 应该有 volume_test_full.shape[0] - 1 个样本
+    num_test_samples = volume_test_full.shape[0]
+    Y_test = volume_test_full[:num_test_samples+1] # or volume_test_full[1:]
+    X_test = flow_test_full[:num_test_samples]
     
     # 扩展标签维度为 (H, W, 1)
     Y_train = np.expand_dims(Y_train, axis=-1)

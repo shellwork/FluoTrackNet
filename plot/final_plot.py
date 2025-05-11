@@ -34,26 +34,6 @@ plt.rcParams.update({
 # 1,0.09,0.08,0.085
 # ...
 
-# ---- 为确保脚本能直接运行，这里创建一些示例CSV文件 ----
-# ---- 您实际使用时，请删除或注释掉这部分，并提供您自己的CSV路径 ----
-def create_dummy_loss_csv(filepath, num_steps=50, num_reps=3, base_val=0.5, decay_rate=0.05, noise_level=0.05, is_val=False):
-    if not os.path.exists(os.path.dirname(filepath)) and os.path.dirname(filepath) != '':
-        os.makedirs(os.path.dirname(filepath))
-    header = ['step'] + [f'rep{i+1}' for i in range(num_reps)]
-    data = [header]
-    for step in range(num_steps):
-        row = [step]
-        for _ in range(num_reps):
-            val_offset = 0.1 if is_val else 0
-            loss = base_val * np.exp(-decay_rate * step) + val_offset + np.random.normal(0, noise_level)
-            row.append(max(0.001, loss)) # Ensure loss is positive
-        data.append(row)
-    with open(filepath, 'w', newline='') as f:
-        import csv
-        writer = csv.writer(f)
-        writer.writerows(data)
-    print(f"创建了示例CSV: {filepath}")
-
 # 创建示例文件 (如果它们不存在)
 dummy_data_dir = "./"
 if not os.path.exists(dummy_data_dir):
@@ -64,14 +44,6 @@ dummy_val_loss_modelA_path = os.path.join(dummy_data_dir, "val_loss.csv")
 dummy_train_loss_modelB_path = os.path.join(dummy_data_dir, "modelB_train_loss.csv")
 dummy_val_loss_modelB_path = os.path.join(dummy_data_dir, "modelB_val_loss.csv")
 
-if not os.path.exists(dummy_train_loss_modelA_path):
-    create_dummy_loss_csv(dummy_train_loss_modelA_path, num_steps=100)
-if not os.path.exists(dummy_val_loss_modelA_path):
-    create_dummy_loss_csv(dummy_val_loss_modelA_path, num_steps=100, is_val=True)
-if not os.path.exists(dummy_train_loss_modelB_path):
-    create_dummy_loss_csv(dummy_train_loss_modelB_path, num_steps=100, base_val=0.4)
-if not os.path.exists(dummy_val_loss_modelB_path):
-    create_dummy_loss_csv(dummy_val_loss_modelB_path, num_steps=100, base_val=0.4, is_val=True)
 # ---- 示例CSV创建结束 ----
 
 loss_csv_files = {
@@ -90,15 +62,15 @@ step_column_name_in_csv = 'step' # CSV中代表训练步数的列名
 # 2.2 MAPE 和 RMSE 数据 (手动输入)
 # 格式: {'模型/配置名称': [重复1值, 重复2值, 重复3值]}
 mape_data_comparison = {
-    '模型X': [0.15, 0.14, 0.16],
-    '模型Y': [0.12, 0.11, 0.13],
-    '模型Z': [0.18, 0.17, 0.19]
+    'FluoTrackNet': [10.80, 11.58, 11.15],
+    'CNN': [62.57, 55.11, 55.01],
+    'LSTM': [67.99, 67.82, 67.51]
 }
 
 rmse_data_comparison = {
-    '模型X': [0.25, 0.26, 0.24],
-    '模型Y': [0.20, 0.21, 0.19],
-    '模型Z': [0.30, 0.29, 0.31]
+    'FluoTrackNet': [0.015466, 0.01648, 0.01617],
+    'CNN': [0.0384, 0.0356, 0.0369],
+    'LSTM': [0.0472, 0.0469, 0.0471]
 }
 
 # 2.3 消融实验数据 (手动输入)
@@ -293,19 +265,19 @@ if __name__ == '__main__':
 
     # 4.4 绘制消融实验结果柱状图
     # 为MAPE绘制一个图
-    plot_metric_barchart(ablation_mape_data,
-                         metric_name='MAPE',
-                         title='Ablation Study for MAPE',
-                         xlabel='Model',
-                         config_order=ablation_configurations, # 指定配置的顺序
-                         output_filename_prefix='ablation_study')
+#     plot_metric_barchart(ablation_mape_data,
+#                          metric_name='MAPE',
+#                          title='Ablation Study for MAPE',
+#                          xlabel='Model',
+#                          config_order=ablation_configurations, # 指定配置的顺序
+#                          output_filename_prefix='ablation_study')
 
-    # 为RMSE绘制一个图
-    plot_metric_barchart(ablation_rmse_data,
-                         metric_name='RMSE',
-                         title='Ablation Study for RMSE',
-                         xlabel='Model',
-                         config_order=ablation_configurations, # 指定配置的顺序
-                         output_filename_prefix='ablation_study')
+#     # 为RMSE绘制一个图
+#     plot_metric_barchart(ablation_rmse_data,
+#                          metric_name='RMSE',
+#                          title='Ablation Study for RMSE',
+#                          xlabel='Model',
+#                          config_order=ablation_configurations, # 指定配置的顺序
+#                          output_filename_prefix='ablation_study')
 
     print("所有图表生成完毕。")

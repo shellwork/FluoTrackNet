@@ -41,7 +41,7 @@ cnn_flat_size: 128
 swanlab: false
 workspace: shellwork
 project: STDN
-experiment_name: ver2_2
+experiment_name: ver2_3
 
 # 推理代码配置
 model_path: "model_output/bioCV_STDN20250506153104.h5"
