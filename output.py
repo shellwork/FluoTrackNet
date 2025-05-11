@@ -12,6 +12,8 @@ import pre_data
 from attention import Attention, SimpleAttention
 from plot import visualization_plot
 
+# 该代码依然存在问题待修复
+
 if __name__ == '__main__':
     # --- 1. 加载配置文件 ---
     config_path = 'config.yaml'
