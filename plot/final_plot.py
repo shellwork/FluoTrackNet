@@ -5,20 +5,22 @@ import numpy as np
 import os
 
 # --- 1. 绘图风格设置 (Publication Quality) ---
-plt.style.use('seaborn-paper')
+plt.style.use('seaborn-whitegrid')
 plt.rcParams.update({
-    'font.sans-serif': ['SimHei', 'Arial', 'DejaVu Sans'], # 添加SimHei支持中文显示
-    'axes.unicode_minus': False, # 正确显示负号
-    'font.size': 12,
-    'axes.labelsize': 14,
-    'axes.titlesize': 16,
-    'xtick.labelsize': 12,
-    'ytick.labelsize': 12,
-    'legend.fontsize': 12,
-    'figure.figsize': (10, 6),
-    'lines.linewidth': 2,
+    'font.sans-serif': ['SimHei', 'Arial', 'DejaVu Sans'], # Ensure SimHei is available
+    'axes.unicode_minus': False,
+    'font.size': 11, # Slightly smaller base font for a compact look
+    'axes.labelsize': 13,
+    'axes.titlesize': 15,
+    'xtick.labelsize': 11,
+    'ytick.labelsize': 11,
+    'legend.fontsize': 10,
+    'figure.figsize': (10, 6), # Default, will be overridden in functions
+    'lines.linewidth': 1.8, # Slightly thinner lines
     'lines.markersize': 6,
-    'errorbar.capsize': 4
+    'errorbar.capsize': 3, # Smaller capsize
+    'grid.linestyle': '--', # Dashed grid lines, common in publication styles
+    'grid.alpha': 0.7
 })
 
 # --- 2. 数据输入区 ---
@@ -61,16 +63,28 @@ step_column_name_in_csv = 'step' # CSV中代表训练步数的列名
 
 # 2.2 MAPE 和 RMSE 数据 (手动输入)
 # 格式: {'模型/配置名称': [重复1值, 重复2值, 重复3值]}
-mape_data_comparison = {
-    'FluoTrackNet': [10.80, 11.58, 11.15],
-    'CNN': [62.57, 55.11, 55.01],
-    'LSTM': [67.99, 67.82, 67.51]
-}
+# mape_data_comparison = {
+#     'FluoTrackNet': [10.80, 11.58, 11.15],
+#     'CNN': [62.57, 55.11, 55.01],
+#     'LSTM': [67.99, 67.82, 67.51]
+# }
+
+# rmse_data_comparison = {
+#     'FluoTrackNet': [0.015466, 0.01648, 0.01617],
+#     'CNN': [0.0384, 0.0356, 0.0369],
+#     'LSTM': [0.0472, 0.0469, 0.0471]
+# }
 
 rmse_data_comparison = {
-    'FluoTrackNet': [0.015466, 0.01648, 0.01617],
-    'CNN': [0.0384, 0.0356, 0.0369],
-    'LSTM': [0.0472, 0.0469, 0.0471]
+    'ver_2_3': [0.0154666332527995, 0.016481015831232, 0.0161775816231966],
+    'Ver_2_1': [0.0152189433574676, 0.0104870507493615],
+    'Ver_1_1': [0.0293043032288551, 0.0293961521238088, 0.0320063158869743]
+}
+
+mape_data_comparison = {
+    'ver_2_3': [10.806119441986, 11.5845218300819, 11.1535042524337],
+    'Ver_2_1': [9.38047766685485, 8.28179270029068],
+    'Ver_1_1': [15.1275441050529, 15.3703674674034, 15.5423238873481]
 }
 
 # 2.3 消融实验数据 (手动输入)
@@ -102,14 +116,11 @@ def plot_loss_curves_from_csv(loss_files_dict, step_col='step',
     step_col: CSV中包含step/epoch信息的列名。
     """
     plt.figure(figsize=(12, 7)) # 稍大图像以便容纳多条线
-    
+    color_idx = 0
     # 使用Seaborn的颜色调色板，以便有足够的区分度
     # num_total_lines = sum(len(paths) for paths in loss_files_dict.values())
     # colors = sns.color_palette("husl", num_total_lines) # hue, saturation, lightness
-    color_palette = plt.cm.get_cmap('tab10', len(loss_files_dict) * 2) # tab10 是一个常用的高质量调色板
-
-    color_idx = 0
-
+    colors = plt.cm.get_cmap('Blues')(np.linspace(0.4, 0.9, len(loss_files_dict) * 2))
     for model_name, paths in loss_files_dict.items():
         for loss_type, csv_path in paths.items():
             if not csv_path or not os.path.exists(csv_path):
@@ -151,7 +162,7 @@ def plot_loss_curves_from_csv(loss_files_dict, step_col='step',
 
             line_style = '--' if loss_type == 'val' else '-'
             label_name = f'{model_name} - {"Val" if loss_type == "val" else "Train"}'
-            current_color = color_palette(color_idx / (len(loss_files_dict) * 2 -1 )) if len(loss_files_dict) * 2 >1 else color_palette(0)
+            current_color = colors[color_idx % len(colors)] 
 
 
             plt.plot(steps, mean_loss, label=label_name, linestyle=line_style, color=current_color)
@@ -197,14 +208,14 @@ def plot_metric_barchart(data_dict, metric_name,
         return
 
     x = np.arange(len(labels))
-    width = 0.4 # 柱子的宽度，可以根据柱子数量调整
+    width = 0.7 # 柱子的宽度，可以根据柱子数量调整
 
     # 为每个指标图使用不同的颜色方案，或者固定一种
     # colors = sns.color_palette("viridis", len(labels))
-    colors = plt.cm.get_cmap('Set2', len(labels))(np.linspace(0, 1, len(labels)))
+    colors = plt.cm.get_cmap('Blues')(np.linspace(0.5, 1.0, len(labels)))
 
 
-    fig, ax = plt.subplots(figsize=(max(8, len(labels) * 2), 6)) # 动态调整图宽度
+    fig, ax = plt.subplots(figsize=(max(5, len(labels) * 0.6), 6)) # 动态调整图宽度
     rects = ax.bar(x, means, width, yerr=std_devs, capsize=5, color=colors, label=metric_name)
 
     ax.set_ylabel(ylabel_override if ylabel_override else metric_name, fontsize=14)
